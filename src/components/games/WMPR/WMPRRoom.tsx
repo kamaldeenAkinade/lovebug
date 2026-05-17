@@ -18,6 +18,9 @@ interface WMPRRoomProps {
 type Phase = 'pick-and-guess' | 'waiting-for-partner' | 'reveal' | 'game-over';
 
 type RoundGS = {
+  done?: boolean;
+  p1Score?: number;
+  p2Score?: number;
   questionIndex: number;
   p1: { pick: number | null; guess: number | null };
   p2: { pick: number | null; guess: number | null };
@@ -68,6 +71,8 @@ export default function WMPRRoom({ deck, p1Name, p2Name, myRole, room, onEnd }: 
   const [p2Total, setP2Total] = useState(0);
   const [finalScores, setFinalScores] = useState<{ p1: number; p2: number } | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const phaseRef = useRef<Phase>('pick-and-guess');
+  phaseRef.current = phase;
 
   const question = deck.questions[questionOrder[questionIndex]] as [string, string];
   const optionsOrder = shuffleSeed[questionIndex] ?? [0, 1];
@@ -87,6 +92,14 @@ export default function WMPRRoom({ deck, p1Name, p2Name, myRole, room, onEnd }: 
     const stopPolling = pollRoom(room.code, (updatedRoom) => {
       const gs = updatedRoom.gameState as RoundGS | null;
       if (!gs) return;
+      if (phaseRef.current === 'game-over') return;
+
+      if (gs.done) {
+        phaseRef.current = 'game-over';
+        setFinalScores({ p1: gs.p1Score ?? 0, p2: gs.p2Score ?? 0 });
+        setPhase('game-over');
+        return;
+      }
 
       const localQI = questionIndexRef.current;
 
@@ -131,7 +144,8 @@ export default function WMPRRoom({ deck, p1Name, p2Name, myRole, room, onEnd }: 
     const latestRoom = await getRoom(room.code);
     const base = latestRoom ?? room;
     const updatedRoom = JSON.parse(JSON.stringify(base)) as Room;
-    const existingGS = (updatedRoom.gameState as RoundGS | null) ?? {
+    const rawGS = updatedRoom.gameState as RoundGS | null;
+    const existingGS = (rawGS?.questionIndex === questionIndex ? rawGS : null) ?? {
       questionIndex,
       p1: { pick: null, guess: null },
       p2: { pick: null, guess: null },
@@ -175,8 +189,22 @@ export default function WMPRRoom({ deck, p1Name, p2Name, myRole, room, onEnd }: 
     const next = questionIndex + 1;
 
     if (next >= total) {
+      phaseRef.current = 'game-over';
       setFinalScores({ p1: newP1, p2: newP2 });
       setPhase('game-over');
+      const latestRoom = await getRoom(room.code);
+      if (latestRoom) {
+        const updatedRoom = JSON.parse(JSON.stringify(latestRoom)) as Room;
+        updatedRoom.gameState = {
+          done: true,
+          p1Score: newP1,
+          p2Score: newP2,
+          questionIndex,
+          p1: { pick: null, guess: null },
+          p2: { pick: null, guess: null },
+        } as unknown as Room['gameState'];
+        await updateRoom(updatedRoom);
+      }
       return;
     }
 
