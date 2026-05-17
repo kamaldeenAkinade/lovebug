@@ -42,7 +42,7 @@ export const naijaLifeDeck: HWDYKMDeck = {
     "What do I miss most about Nigeria when I am somewhere else?",
     "What is my favorite part of a traditional Nigerian celebration?",
     "How do I feel about the saying that things will be better in Nigeria?",
-    "What is my honest take on Nigerian music and its global rise?",
+    "What is my honest take on the pressure Nigerians feel to succeed early?",
     "What Nigerian slang do I use the most without even thinking?",
     "How do I feel about returning to my hometown for events and ceremonies?",
     "What is the one Nigerian meal I would cook for someone I was trying to impress?",
