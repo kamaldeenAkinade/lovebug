@@ -1,0 +1,31 @@
+import { WMPRDeck } from '@/lib/types';
+
+export const deepCutsDeck: WMPRDeck = {
+  id: 'deepcuts',
+  name: 'Deep Cuts',
+  emoji: '🌙',
+  color: '#A78BFA',
+  description: 'Soft questions for quiet evenings.',
+  questions: [
+    ['Forget your happiest memory', 'Forget your saddest memory'],
+    ['Be deeply understood by one person', 'Be liked by everyone you meet'],
+    ['Travel anywhere alone', 'Stay home with the people you love'],
+    ['Have your dream career and an average love life', 'Have an average career and a dream love life'],
+    ['Always know what people really think of you', 'Never know what anyone thinks of you'],
+    ['Be the funniest person in the room', 'Be the kindest person in the room'],
+    ['Have one true calling', 'Be quietly good at many things'],
+    ['Live where you grew up forever', 'Never go back home'],
+    ['Be remembered after you die', 'Be deeply present while you live'],
+    ['Have all the answers but no questions', 'Have all the questions but no answers'],
+    ['Be the one who loves more', 'Be the one who is loved more'],
+    ['Know your purpose at age 20', 'Find it slowly over many years'],
+    ['Be brave for an hour a day', 'Be patient all the time'],
+    ['Have a life full of small joys', 'Have a life with one great triumph'],
+    ['Spend a year in a place you have always dreamed of, alone', 'Spend ten years in the same town with your favorite people'],
+    ['Apologize to someone you wronged', 'Forgive someone who wronged you'],
+    ['Always be slightly ahead of where you wanted to be', 'Always be slightly behind, but enjoying the road'],
+    ['Be the person who makes others feel seen', 'Be the person who is finally seen'],
+    ['Take a leap and possibly fail', 'Stay safe and possibly wonder'],
+    ['Be sure', 'Be open'],
+  ],
+};
