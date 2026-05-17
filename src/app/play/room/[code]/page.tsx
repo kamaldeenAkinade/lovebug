@@ -57,7 +57,13 @@ export default function RoomPage() {
         setLoading(false);
 
         if (updatedRoom.screen === 'arcade') {
-          setScreen('arcade');
+          setScreen((prev) => (prev === 'lobby' ? 'arcade' : prev));
+        } else if (updatedRoom.screen === 'game' && updatedRoom.currentGame && updatedRoom.currentDeck) {
+          const decks = DECK_MAP[updatedRoom.currentGame];
+          const deck = decks.find((d) => d.id === updatedRoom.currentDeck) ?? null;
+          setSelectedGame(updatedRoom.currentGame);
+          setSelectedDeck(deck);
+          setScreen('game');
         }
       });
       return stopPolling;
