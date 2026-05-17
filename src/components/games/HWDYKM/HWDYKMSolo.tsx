@@ -14,9 +14,10 @@ interface HWDYKMSoloProps {
   onEnd: (p1Score: number, p2Score: number) => void;
 }
 
-type Phase = 'p1-answer' | 'pass-to-p2' | 'p2-answer' | 'reveal';
+type Phase = 'p1-answer' | 'pass-to-p2' | 'p2-answer' | 'reveal' | 'game-over';
 
 export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloProps) {
+  const total = deck.questions.length;
   const [questionIndex, setQuestionIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('p1-answer');
   const [p1Answer, setP1Answer] = useState('');
@@ -25,51 +26,60 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
   const [p2Guess, setP2Guess] = useState('');
   const [p1Score, setP1Score] = useState(0);
   const [p2Score, setP2Score] = useState(0);
+  const [finalScores, setFinalScores] = useState<{ p1: number; p2: number } | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const question = deck.questions[questionIndex % deck.questions.length];
+  const question = deck.questions[questionIndex];
 
-  const handleP1Submit = useCallback(() => {
-    setPhase('pass-to-p2');
-  }, []);
-
-  const handlePass = useCallback(() => {
-    setPhase('p2-answer');
-  }, []);
-
-  const handleP2Submit = useCallback(() => {
-    setPhase('reveal');
-  }, []);
+  const handleP1Submit = useCallback(() => setPhase('pass-to-p2'), []);
+  const handlePass = useCallback(() => setPhase('p2-answer'), []);
+  const handleP2Submit = useCallback(() => setPhase('reveal'), []);
 
   const handleNextRound = useCallback(() => {
     const s1 = p1Answer.toLowerCase().trim() === p2Guess.toLowerCase().trim() ? 1 : 0;
     const s2 = p2Answer.toLowerCase().trim() === p1Guess.toLowerCase().trim() ? 1 : 0;
-    setP1Score((s) => s + s1);
-    setP2Score((s) => s + s2);
+    const newP1 = p1Score + s1;
+    const newP2 = p2Score + s2;
+    setP1Score(newP1);
+    setP2Score(newP2);
 
     if (s1 + s2 > 0) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 2000);
     }
 
-    setTimeout(() => {
-      setQuestionIndex((i) => i + 1);
-      setPhase('p1-answer');
-      setP1Answer('');
-      setP1Guess('');
-      setP2Answer('');
-      setP2Guess('');
-    }, 500);
-  }, [p1Answer, p1Guess, p2Answer, p2Guess]);
+    const next = questionIndex + 1;
+    if (next >= total) {
+      setTimeout(() => {
+        setFinalScores({ p1: newP1, p2: newP2 });
+        setPhase('game-over');
+      }, 500);
+    } else {
+      setTimeout(() => {
+        setQuestionIndex(next);
+        setPhase('p1-answer');
+        setP1Answer('');
+        setP1Guess('');
+        setP2Answer('');
+        setP2Guess('');
+      }, 500);
+    }
+  }, [p1Answer, p1Guess, p2Answer, p2Guess, p1Score, p2Score, questionIndex, total]);
 
-  const handleEndGame = useCallback(() => {
+  const handleQuit = useCallback(() => {
     onEnd(p1Score, p2Score);
   }, [p1Score, p2Score, onEnd]);
+
+  const counter = (
+    <p className="text-sm text-ink-mute font-sans">
+      Question {questionIndex + 1} of {total}
+    </p>
+  );
 
   const quitButton = (
     <div className="fixed top-4 right-4 z-40">
       <button
-        onClick={handleEndGame}
+        onClick={handleQuit}
         className="chunky-border-sm bg-bg-coral px-3 py-1 text-sm font-sans text-ink hover:bg-accent-red transition-colors"
       >
         ✕ Quit
@@ -77,10 +87,42 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
     </div>
   );
 
+  if (phase === 'game-over' && finalScores) {
+    const winner =
+      finalScores.p1 > finalScores.p2 ? p1Name
+      : finalScores.p2 > finalScores.p1 ? p2Name
+      : null;
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8 animate-float-up">
+        <Confetti active />
+        <h2 className="font-display text-4xl font-bold text-ink text-center">Game Over!</h2>
+        {winner ? (
+          <p className="font-display text-2xl text-ink text-center">{winner} wins!</p>
+        ) : (
+          <p className="font-display text-2xl text-ink text-center">It&apos;s a tie!</p>
+        )}
+        <div className="flex gap-8 justify-center">
+          <div className="chunky-border-sm bg-bg-peach px-8 py-4 text-center">
+            <p className="text-sm text-ink-mute">{p1Name}</p>
+            <p className="font-display text-4xl font-bold text-ink">{finalScores.p1}</p>
+          </div>
+          <div className="chunky-border-sm bg-bg-peach px-8 py-4 text-center">
+            <p className="text-sm text-ink-mute">{p2Name}</p>
+            <p className="font-display text-4xl font-bold text-ink">{finalScores.p2}</p>
+          </div>
+        </div>
+        <Button variant="primary" onClick={() => onEnd(finalScores.p1, finalScores.p2)}>
+          Back to arcade
+        </Button>
+      </div>
+    );
+  }
+
   if (phase === 'p1-answer') {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 animate-float-up max-w-md mx-auto w-full">
         {quitButton}
+        {counter}
         <h2 className="font-display text-2xl font-bold text-ink text-center">{p1Name}</h2>
         <p className="text-lg text-ink-soft text-center">{question}</p>
         <Input
@@ -110,6 +152,7 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 animate-float-up max-w-md mx-auto w-full">
         {quitButton}
+        {counter}
         <h2 className="font-display text-2xl font-bold text-ink text-center">{p2Name}</h2>
         <p className="text-lg text-ink-soft text-center">{question}</p>
         <Input
@@ -138,7 +181,9 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8 animate-float-up">
         <Confetti active={showConfetti || p1Correct || p2Correct} />
+        {quitButton}
         <h2 className="font-display text-3xl font-bold text-ink text-center">Reveal!</h2>
+        {counter}
         <p className="text-lg text-ink-soft text-center max-w-md">{question}</p>
 
         <div className="max-w-lg w-full space-y-4">
@@ -159,11 +204,6 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
           </div>
         </div>
 
-        <div className="flex gap-4">
-          <Button variant="primary" onClick={handleNextRound}>Next round</Button>
-          <Button variant="ghost" onClick={handleEndGame}>End game</Button>
-        </div>
-
         <div className="flex gap-8 justify-center">
           <div className="text-center">
             <p className="text-sm text-ink-mute">{p1Name}</p>
@@ -174,6 +214,10 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
             <p className="font-display text-2xl font-bold">{p2Score + (p2Correct ? 1 : 0)}</p>
           </div>
         </div>
+
+        <Button variant="primary" onClick={handleNextRound}>
+          {questionIndex + 1 >= total ? 'See results' : 'Next round'}
+        </Button>
       </div>
     );
   }

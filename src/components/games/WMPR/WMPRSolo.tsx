@@ -13,7 +13,7 @@ interface WMPRSoloProps {
   onEnd: (p1Score: number, p2Score: number) => void;
 }
 
-type Phase = 'p1-pick' | 'p1-guess' | 'pass-to-p2' | 'p2-pick' | 'p2-guess' | 'pass-to-p1' | 'p1-guess-p2' | 'reveal';
+type Phase = 'p1-pick' | 'p1-guess' | 'pass-to-p2' | 'p2-pick' | 'p2-guess' | 'pass-to-p1' | 'p1-guess-p2' | 'reveal' | 'game-over';
 
 function generateShuffleSeed(count: number): number[][] {
   return Array.from({ length: count }, () =>
@@ -22,7 +22,8 @@ function generateShuffleSeed(count: number): number[][] {
 }
 
 export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps) {
-  const [shuffleSeed] = useState(() => generateShuffleSeed(deck.questions.length));
+  const total = deck.questions.length;
+  const [shuffleSeed] = useState(() => generateShuffleSeed(total));
   const [questionIndex, setQuestionIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('p1-pick');
   const [p1Pick, setP1Pick] = useState<number | null>(null);
@@ -31,16 +32,12 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
   const [p2Guess, setP2Guess] = useState<number | null>(null);
   const [p1Total, setP1Total] = useState(0);
   const [p2Total, setP2Total] = useState(0);
-  const [roundScores, setRoundScores] = useState<{ p1: number; p2: number }[]>([]);
+  const [finalScores, setFinalScores] = useState<{ p1: number; p2: number } | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const question = deck.questions[questionIndex % deck.questions.length] as [string, string];
-  const optionsOrder = shuffleSeed[questionIndex % deck.questions.length] ?? [0, 1];
-
-  const displayOptions: [string, string] = [
-    question[optionsOrder[0]],
-    question[optionsOrder[1]],
-  ];
+  const question = deck.questions[questionIndex] as [string, string];
+  const optionsOrder = shuffleSeed[questionIndex] ?? [0, 1];
+  const displayOptions: [string, string] = [question[optionsOrder[0]], question[optionsOrder[1]]];
 
   const handleP1Pick = useCallback((pick: number) => {
     setP1Pick(pick);
@@ -52,9 +49,7 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     setPhase('pass-to-p2');
   }, []);
 
-  const handlePassToP2 = useCallback(() => {
-    setPhase('p2-pick');
-  }, []);
+  const handlePassToP2 = useCallback(() => setPhase('p2-pick'), []);
 
   const handleP2Pick = useCallback((pick: number) => {
     setP2Pick(pick);
@@ -66,9 +61,7 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     setPhase('pass-to-p1');
   }, []);
 
-  const handlePassToP1 = useCallback(() => {
-    setPhase('p1-guess-p2');
-  }, []);
+  const handlePassToP1 = useCallback(() => setPhase('p1-guess-p2'), []);
 
   const handleP1GuessP2 = useCallback((guess: number) => {
     setP1Guess(guess);
@@ -78,34 +71,37 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
   const handleNextRound = useCallback(() => {
     const s1 = p1Guess === p2Pick ? 1 : 0;
     const s2 = p2Guess === p1Pick ? 1 : 0;
-    setRoundScores((prev) => [...prev, { p1: s1, p2: s2 }]);
-    setP1Total((t) => t + s1);
-    setP2Total((t) => t + s2);
+    const newP1 = p1Total + s1;
+    const newP2 = p2Total + s2;
+    setP1Total(newP1);
+    setP2Total(newP2);
 
     if (s1 + s2 > 0) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 2000);
     }
 
-    setTimeout(() => {
-      setQuestionIndex((i) => i + 1);
-      setPhase('p1-pick');
-      setP1Pick(null);
-      setP1Guess(null);
-      setP2Pick(null);
-      setP2Guess(null);
-    }, 500);
-  }, [p1Pick, p1Guess, p2Pick, p2Guess]);
+    const next = questionIndex + 1;
+    if (next >= total) {
+      setTimeout(() => {
+        setFinalScores({ p1: newP1, p2: newP2 });
+        setPhase('game-over');
+      }, 500);
+    } else {
+      setTimeout(() => {
+        setQuestionIndex(next);
+        setPhase('p1-pick');
+        setP1Pick(null);
+        setP1Guess(null);
+        setP2Pick(null);
+        setP2Guess(null);
+      }, 500);
+    }
+  }, [p1Pick, p1Guess, p2Pick, p2Guess, p1Total, p2Total, questionIndex, total]);
 
-  const handleEndGame = useCallback(() => {
-    let finalP1 = p1Total;
-    let finalP2 = p2Total;
-    roundScores.forEach((s) => {
-      finalP1 += s.p1;
-      finalP2 += s.p2;
-    });
-    onEnd(finalP1, finalP2);
-  }, [p1Total, p2Total, roundScores, onEnd]);
+  const handleQuit = useCallback(() => {
+    onEnd(p1Total, p2Total);
+  }, [p1Total, p2Total, onEnd]);
 
   const renderOptions = (onPick: (i: number) => void, highlight?: number | null) => (
     <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
@@ -123,10 +119,16 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     </div>
   );
 
+  const counter = (
+    <p className="text-sm text-ink-mute font-sans">
+      Question {questionIndex + 1} of {total}
+    </p>
+  );
+
   const quitButton = (
     <div className="fixed top-4 right-4 z-40">
       <button
-        onClick={handleEndGame}
+        onClick={handleQuit}
         className="chunky-border-sm bg-bg-coral px-3 py-1 text-sm font-sans text-ink hover:bg-accent-red transition-colors"
       >
         ✕ Quit
@@ -134,10 +136,42 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     </div>
   );
 
+  if (phase === 'game-over' && finalScores) {
+    const winner =
+      finalScores.p1 > finalScores.p2 ? p1Name
+      : finalScores.p2 > finalScores.p1 ? p2Name
+      : null;
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8 animate-float-up">
+        <Confetti active />
+        <h2 className="font-display text-4xl font-bold text-ink text-center">Game Over!</h2>
+        {winner ? (
+          <p className="font-display text-2xl text-ink text-center">{winner} wins!</p>
+        ) : (
+          <p className="font-display text-2xl text-ink text-center">It&apos;s a tie!</p>
+        )}
+        <div className="flex gap-8 justify-center">
+          <div className="chunky-border-sm bg-bg-peach px-8 py-4 text-center">
+            <p className="text-sm text-ink-mute">{p1Name}</p>
+            <p className="font-display text-4xl font-bold text-ink">{finalScores.p1}</p>
+          </div>
+          <div className="chunky-border-sm bg-bg-peach px-8 py-4 text-center">
+            <p className="text-sm text-ink-mute">{p2Name}</p>
+            <p className="font-display text-4xl font-bold text-ink">{finalScores.p2}</p>
+          </div>
+        </div>
+        <Button variant="primary" onClick={() => onEnd(finalScores.p1, finalScores.p2)}>
+          Back to arcade
+        </Button>
+      </div>
+    );
+  }
+
   if (phase === 'p1-pick') {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 animate-float-up">
         {quitButton}
+        {counter}
         <h2 className="font-display text-2xl font-bold text-ink text-center">{p1Name}, what would you rather?</h2>
         {renderOptions(handleP1Pick)}
       </div>
@@ -148,6 +182,7 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 animate-float-up">
         {quitButton}
+        {counter}
         <h2 className="font-display text-2xl font-bold text-ink text-center">{p1Name}, what will {p2Name} pick?</h2>
         {renderOptions(handleP1Guess)}
       </div>
@@ -162,6 +197,7 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 animate-float-up">
         {quitButton}
+        {counter}
         <h2 className="font-display text-2xl font-bold text-ink text-center">{p2Name}, what would you rather?</h2>
         {renderOptions(handleP2Pick)}
       </div>
@@ -172,6 +208,7 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 animate-float-up">
         {quitButton}
+        {counter}
         <h2 className="font-display text-2xl font-bold text-ink text-center">{p2Name}, what did {p1Name} pick?</h2>
         {renderOptions(handleP2Guess)}
       </div>
@@ -186,6 +223,7 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 animate-float-up">
         {quitButton}
+        {counter}
         <h2 className="font-display text-2xl font-bold text-ink text-center">{p1Name}, what did {p2Name} pick?</h2>
         {renderOptions(handleP1GuessP2)}
       </div>
@@ -199,7 +237,9 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8 animate-float-up">
         <Confetti active={showConfetti || p1Correct || p2Correct} />
+        {quitButton}
         <h2 className="font-display text-3xl font-bold text-ink text-center">Reveal!</h2>
+        {counter}
 
         <div className="max-w-lg w-full space-y-4">
           <div className={`chunky-border p-6 bg-bg-warm ${p1Correct ? 'bg-accent-yellow' : ''}`}>
@@ -219,11 +259,6 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
           </div>
         </div>
 
-        <div className="flex gap-4">
-          <Button variant="primary" onClick={handleNextRound}>Next round</Button>
-          <Button variant="ghost" onClick={handleEndGame}>End game</Button>
-        </div>
-
         <div className="flex gap-8 justify-center">
           <div className="text-center">
             <p className="text-sm text-ink-mute">{p1Name}</p>
@@ -234,6 +269,10 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
             <p className="font-display text-2xl font-bold">{p2Total + (p2Correct ? 1 : 0)}</p>
           </div>
         </div>
+
+        <Button variant="primary" onClick={handleNextRound}>
+          {questionIndex + 1 >= total ? 'See results' : 'Next round'}
+        </Button>
       </div>
     );
   }
