@@ -6,8 +6,10 @@ import Button from '@/components/shared/Button';
 import ArcadeDashboard from '@/components/arcade/ArcadeDashboard';
 import DeckPicker from '@/components/arcade/DeckPicker';
 import WMPRRoom from '@/components/games/WMPR/WMPRRoom';
+import HWDYKMRoom from '@/components/games/HWDYKM/HWDYKMRoom';
+import TriviaRoom from '@/components/games/Trivia/TriviaRoom';
 import { pollRoom, getStoredPlayerRole, updateRoom } from '@/lib/room';
-import { Room, GameId, Deck, WMPRDeck } from '@/lib/types';
+import { Room, GameId, Deck, WMPRDeck, HWDYKMDeck, TriviaDeck } from '@/lib/types';
 import { wmprDecks } from '@/content/wmpr';
 import { hwdykmDecks } from '@/content/hwdykm';
 import { triviaDecks } from '@/content/trivia';
@@ -226,26 +228,24 @@ export default function RoomPage() {
   }
 
   if (screen === 'game' && room && selectedGame && selectedDeck) {
-    if (selectedGame === 'wmpr') {
-      return (
-        <WMPRRoom
-          key={gameKey}
-          deck={selectedDeck as WMPRDeck}
-          p1Name={room.p1?.name || 'P1'}
-          p2Name={room.p2?.name || 'P2'}
-          myRole={myRole!}
-          room={room}
-          onEnd={handleGameEnd}
-        />
-      );
-    }
+    const sharedProps = {
+      key: gameKey,
+      p1Name: room.p1?.name || 'P1',
+      p2Name: room.p2?.name || 'P2',
+      myRole: myRole!,
+      room,
+      onEnd: handleGameEnd,
+    };
 
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-ink-soft">This game is not yet available in cross-device mode.</p>
-        <Button variant="ghost" onClick={() => setScreen('arcade')}>Back</Button>
-      </div>
-    );
+    if (selectedGame === 'wmpr') {
+      return <WMPRRoom {...sharedProps} deck={selectedDeck as WMPRDeck} />;
+    }
+    if (selectedGame === 'hwdykm') {
+      return <HWDYKMRoom {...sharedProps} deck={selectedDeck as HWDYKMDeck} />;
+    }
+    if (selectedGame === 'trivia') {
+      return <TriviaRoom {...sharedProps} deck={selectedDeck as TriviaDeck} />;
+    }
   }
 
   return null;
