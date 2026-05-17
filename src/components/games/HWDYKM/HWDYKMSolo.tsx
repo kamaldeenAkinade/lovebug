@@ -16,8 +16,22 @@ interface HWDYKMSoloProps {
 
 type Phase = 'p1-answer' | 'pass-to-p2' | 'p2-answer' | 'reveal' | 'game-over';
 
+const QUESTIONS_PER_GAME = 10;
+
+function shuffleIndices(count: number): number[] {
+  const indices = Array.from({ length: count }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
 export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloProps) {
-  const total = deck.questions.length;
+  const [questionOrder] = useState(() =>
+    shuffleIndices(deck.questions.length).slice(0, Math.min(QUESTIONS_PER_GAME, deck.questions.length))
+  );
+  const total = questionOrder.length;
   const [questionIndex, setQuestionIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('p1-answer');
   const [p1Answer, setP1Answer] = useState('');
@@ -29,7 +43,7 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
   const [finalScores, setFinalScores] = useState<{ p1: number; p2: number } | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const question = deck.questions[questionIndex];
+  const question = deck.questions[questionOrder[questionIndex]];
 
   const handleP1Submit = useCallback(() => setPhase('pass-to-p2'), []);
   const handlePass = useCallback(() => setPhase('p2-answer'), []);

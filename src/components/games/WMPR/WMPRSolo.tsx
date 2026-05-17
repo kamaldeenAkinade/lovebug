@@ -21,8 +21,22 @@ function generateShuffleSeed(count: number): number[][] {
   );
 }
 
+const QUESTIONS_PER_GAME = 10;
+
+function shuffleIndices(count: number): number[] {
+  const indices = Array.from({ length: count }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
 export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps) {
-  const total = deck.questions.length;
+  const [questionOrder] = useState(() =>
+    shuffleIndices(deck.questions.length).slice(0, Math.min(QUESTIONS_PER_GAME, deck.questions.length))
+  );
+  const total = questionOrder.length;
   const [shuffleSeed] = useState(() => generateShuffleSeed(total));
   const [questionIndex, setQuestionIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('p1-pick');
@@ -35,7 +49,7 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
   const [finalScores, setFinalScores] = useState<{ p1: number; p2: number } | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const question = deck.questions[questionIndex] as [string, string];
+  const question = deck.questions[questionOrder[questionIndex]] as [string, string];
   const optionsOrder = shuffleSeed[questionIndex] ?? [0, 1];
   const displayOptions: [string, string] = [question[optionsOrder[0]], question[optionsOrder[1]]];
 

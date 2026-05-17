@@ -23,15 +23,38 @@ type RoundGS = {
   p2: { pick: number | null; guess: number | null };
 };
 
-function generateShuffleSeed(count: number): number[][] {
-  return Array.from({ length: count }, () =>
-    Math.random() > 0.5 ? [0, 1] : [1, 0]
-  );
+const QUESTIONS_PER_GAME = 10;
+
+function seededRng(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
+  return () => { h = (Math.imul(h ^ (h >>> 16), 0x45d9f3b)) | 0; return ((h >>> 0) / 0x100000000); };
+}
+
+function seededShuffleIndices(count: number, seed: string): number[] {
+  const rng = seededRng(seed);
+  const indices = Array.from({ length: count }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
+function generateShuffleSeed(count: number, rng: () => number): number[][] {
+  return Array.from({ length: count }, () => rng() > 0.5 ? [0, 1] : [1, 0]);
 }
 
 export default function WMPRRoom({ deck, p1Name, p2Name, myRole, room, onEnd }: WMPRRoomProps) {
-  const total = deck.questions.length;
-  const [shuffleSeed] = useState(() => generateShuffleSeed(total));
+  const gameSeed = room.code + (room.currentDeck ?? '');
+  const [questionOrder] = useState(() =>
+    seededShuffleIndices(deck.questions.length, gameSeed).slice(0, Math.min(QUESTIONS_PER_GAME, deck.questions.length))
+  );
+  const total = questionOrder.length;
+  const [shuffleSeed] = useState(() => {
+    const rng = seededRng(gameSeed + 'options');
+    return generateShuffleSeed(total, rng);
+  });
   const [questionIndex, setQuestionIndex] = useState(0);
   const questionIndexRef = useRef(questionIndex);
   questionIndexRef.current = questionIndex;
@@ -46,7 +69,7 @@ export default function WMPRRoom({ deck, p1Name, p2Name, myRole, room, onEnd }: 
   const [finalScores, setFinalScores] = useState<{ p1: number; p2: number } | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const question = deck.questions[questionIndex] as [string, string];
+  const question = deck.questions[questionOrder[questionIndex]] as [string, string];
   const optionsOrder = shuffleSeed[questionIndex] ?? [0, 1];
   const displayOptions: [string, string] = [question[optionsOrder[0]], question[optionsOrder[1]]];
 
