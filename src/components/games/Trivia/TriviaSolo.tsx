@@ -56,7 +56,6 @@ export default function TriviaSolo({ deck, p1Name, p2Name, onEnd }: TriviaSoloPr
   const handleNextRound = useCallback(() => {
     const bothCorrect = p1Pick === question.answer && p2Pick === question.answer;
     const newScore = coupleScore + (bothCorrect ? 1 : 0);
-    setCoupleScore(newScore);
 
     if (bothCorrect) {
       setShowConfetti(true);
@@ -66,11 +65,13 @@ export default function TriviaSolo({ deck, p1Name, p2Name, onEnd }: TriviaSoloPr
     const next = questionIndex + 1;
     if (next >= total) {
       setTimeout(() => {
+        setCoupleScore(newScore);
         setFinalScore(newScore);
         setPhase('game-over');
       }, 500);
     } else {
       setTimeout(() => {
+        setCoupleScore(newScore);
         setQuestionIndex(next);
         setPhase('p1-pick');
         setP1Pick(null);
