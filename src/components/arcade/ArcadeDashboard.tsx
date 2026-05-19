@@ -17,11 +17,11 @@ const GAMES: { id: GameId; title: string; emoji: string; color: string; tagline:
     tagline: 'Guess what they would pick.',
   },
   {
-    id: 'hwdykm',
-    title: 'How Well Do You Know Me',
-    emoji: '💭',
+    id: 'thatisme',
+    title: "That's Me!",
+    emoji: '🙋',
     color: '#FF8FB1',
-    tagline: 'Predict their answer.',
+    tagline: 'Who does it better? You decide.',
   },
   {
     id: 'trivia',

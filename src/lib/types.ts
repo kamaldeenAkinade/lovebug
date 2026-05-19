@@ -1,4 +1,4 @@
-export type GameId = 'wmpr' | 'hwdykm' | 'trivia';
+export type GameId = 'wmpr' | 'thatisme' | 'trivia';
 
 export type PlayMode = 'solo' | 'cross-device';
 
@@ -41,6 +41,15 @@ export type HWDYKMDeck = {
   questions: string[];
 };
 
+export type ThatsMeDeck = {
+  id: string;
+  name: string;
+  emoji: string;
+  color: string;
+  description: string;
+  questions: string[];
+};
+
 export type TriviaDeck = {
   id: string;
   name: string;
@@ -74,6 +83,15 @@ export type HWDYKMGameState = {
   p2: HWDYKMPlayerState;
 };
 
+export type ThatsMeGameState = {
+  questionIndex: number;
+  p1Pick: 'p1' | 'p2' | null;
+  p2Pick: 'p1' | 'p2' | null;
+  done?: boolean;
+  p1Score?: number;
+  p2Score?: number;
+};
+
 export type TriviaPlayerState = {
   pick: number | null;
 };
@@ -85,7 +103,7 @@ export type TriviaGameState = {
   p2: TriviaPlayerState;
 };
 
-export type GameState = WMPRGameState | HWDYKMGameState | TriviaGameState;
+export type GameState = WMPRGameState | HWDYKMGameState | TriviaGameState | ThatsMeGameState;
 
 export type Room = {
   code: string;

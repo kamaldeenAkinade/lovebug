@@ -6,18 +6,18 @@ import Button from '@/components/shared/Button';
 import ArcadeDashboard from '@/components/arcade/ArcadeDashboard';
 import DeckPicker from '@/components/arcade/DeckPicker';
 import WMPRSolo from '@/components/games/WMPR/WMPRSolo';
-import HWDYKMSolo from '@/components/games/HWDYKM/HWDYKMSolo';
+import ThatsMeSolo from '@/components/games/ThatsMe/ThatsMeSolo';
 import TriviaSolo from '@/components/games/Trivia/TriviaSolo';
-import { GameId, Deck, WMPRDeck, HWDYKMDeck, TriviaDeck } from '@/lib/types';
+import { GameId, Deck, WMPRDeck, ThatsMeDeck, TriviaDeck } from '@/lib/types';
 import { wmprDecks } from '@/content/wmpr';
-import { hwdykmDecks } from '@/content/hwdykm';
+import { thatsmeDecks } from '@/content/thatisme';
 import { triviaDecks } from '@/content/trivia';
 
 type Screen = 'names' | 'arcade' | 'deck-picker' | 'game';
 
 const DECK_MAP: Record<GameId, Deck[]> = {
   wmpr: wmprDecks,
-  hwdykm: hwdykmDecks,
+  thatisme: thatsmeDecks,
   trivia: triviaDecks,
 };
 
@@ -141,11 +141,11 @@ export default function SoloPage() {
     );
   }
 
-  if (screen === 'game' && selectedGame === 'hwdykm' && selectedDeck) {
-    const hwdykmDeck = selectedDeck as HWDYKMDeck;
+  if (screen === 'game' && selectedGame === 'thatisme' && selectedDeck) {
+    const thatsmeDeck = selectedDeck as ThatsMeDeck;
     return (
       <div className="flex flex-col min-h-screen">
-        <HWDYKMSolo key={gameKey} deck={hwdykmDeck} p1Name={p1Name} p2Name={p2Name} onEnd={handleGameEnd} />
+        <ThatsMeSolo key={gameKey} deck={thatsmeDeck} p1Name={p1Name} p2Name={p2Name} onEnd={handleGameEnd} />
       </div>
     );
   }

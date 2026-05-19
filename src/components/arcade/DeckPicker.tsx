@@ -12,7 +12,7 @@ interface DeckPickerProps {
 
 const GAME_NAMES: Record<GameId, string> = {
   wmpr: 'Would My Partner Rather',
-  hwdykm: 'How Well Do You Know Me',
+  thatisme: "That's Me!",
   trivia: 'Couples Trivia',
 };
 

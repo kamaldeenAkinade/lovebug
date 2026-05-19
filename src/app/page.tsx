@@ -57,13 +57,13 @@ export default function LandingPage() {
               gameId="wmpr"
             />
             <GameCard
-              title="How Well Do You Know Me"
-              tagline="We hand you the questions. Predict your partner's answer. Watch each other react."
+              title="That's Me!"
+              tagline="Who does it better — you or your partner? Pick yourself and defend it."
               time="~10 min"
-              decks="4 decks"
-              emoji="💭"
+              decks="2 decks"
+              emoji="🙋"
               color="#FF8FB1"
-              gameId="hwdykm"
+              gameId="thatisme"
             />
             <GameCard
               title="Couples Trivia"

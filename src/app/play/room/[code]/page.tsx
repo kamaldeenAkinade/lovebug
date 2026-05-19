@@ -6,17 +6,17 @@ import Button from '@/components/shared/Button';
 import ArcadeDashboard from '@/components/arcade/ArcadeDashboard';
 import DeckPicker from '@/components/arcade/DeckPicker';
 import WMPRRoom from '@/components/games/WMPR/WMPRRoom';
-import HWDYKMRoom from '@/components/games/HWDYKM/HWDYKMRoom';
+import ThatsMeRoom from '@/components/games/ThatsMe/ThatsMeRoom';
 import TriviaRoom from '@/components/games/Trivia/TriviaRoom';
 import { pollRoom, getStoredPlayerRole, updateRoom } from '@/lib/room';
-import { Room, GameId, Deck, WMPRDeck, HWDYKMDeck, TriviaDeck } from '@/lib/types';
+import { Room, GameId, Deck, WMPRDeck, ThatsMeDeck, TriviaDeck } from '@/lib/types';
 import { wmprDecks } from '@/content/wmpr';
-import { hwdykmDecks } from '@/content/hwdykm';
+import { thatsmeDecks } from '@/content/thatisme';
 import { triviaDecks } from '@/content/trivia';
 
 const DECK_MAP: Record<GameId, Deck[]> = {
   wmpr: wmprDecks,
-  hwdykm: hwdykmDecks,
+  thatisme: thatsmeDecks,
   trivia: triviaDecks,
 };
 
@@ -240,8 +240,8 @@ export default function RoomPage() {
     if (selectedGame === 'wmpr') {
       return <WMPRRoom {...sharedProps} deck={selectedDeck as WMPRDeck} />;
     }
-    if (selectedGame === 'hwdykm') {
-      return <HWDYKMRoom {...sharedProps} deck={selectedDeck as HWDYKMDeck} />;
+    if (selectedGame === 'thatisme') {
+      return <ThatsMeRoom {...sharedProps} deck={selectedDeck as ThatsMeDeck} />;
     }
     if (selectedGame === 'trivia') {
       return <TriviaRoom {...sharedProps} deck={selectedDeck as TriviaDeck} />;
