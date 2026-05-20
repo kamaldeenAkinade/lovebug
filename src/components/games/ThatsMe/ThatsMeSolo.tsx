@@ -13,7 +13,7 @@ interface ThatsMeSoloProps {
   onEnd: (p1Score: number, p2Score: number) => void;
 }
 
-type Phase = 'p1-pick' | 'pass-to-p2' | 'p2-pick' | 'reveal' | 'game-over';
+type Phase = 'p1-pick' | 'pass-to-p2' | 'p2-pick' | 'reveal' | 'pass-to-p1' | 'game-over';
 
 const QUESTIONS_PER_GAME = 10;
 
@@ -75,8 +75,6 @@ export default function ThatsMeSolo({ deck, p1Name, p2Name, onEnd }: ThatsMeSolo
     const { p1Point, p2Point } = getOutcome(p1Pick, p2Pick, p1Name, p2Name);
     const newP1 = p1Score + (p1Point ? 1 : 0);
     const newP2 = p2Score + (p2Point ? 1 : 0);
-    setP1Score(newP1);
-    setP2Score(newP2);
 
     if (p1Point || p2Point) {
       setShowConfetti(true);
@@ -86,13 +84,17 @@ export default function ThatsMeSolo({ deck, p1Name, p2Name, onEnd }: ThatsMeSolo
     const next = questionIndex + 1;
     if (next >= total) {
       setTimeout(() => {
+        setP1Score(newP1);
+        setP2Score(newP2);
         setFinalScores({ p1: newP1, p2: newP2 });
         setPhase('game-over');
       }, 500);
     } else {
       setTimeout(() => {
+        setP1Score(newP1);
+        setP2Score(newP2);
         setQuestionIndex(next);
-        setPhase('p1-pick');
+        setPhase('pass-to-p1');
         setP1Pick(null);
         setP2Pick(null);
       }, 500);
@@ -176,6 +178,10 @@ export default function ThatsMeSolo({ deck, p1Name, p2Name, onEnd }: ThatsMeSolo
 
   if (phase === 'pass-to-p2') {
     return <PassPhone name={p2Name} onContinue={() => setPhase('p2-pick')} fromName={p1Name} />;
+  }
+
+  if (phase === 'pass-to-p1') {
+    return <PassPhone name={p1Name} onContinue={() => setPhase('p1-pick')} fromName={p2Name} />;
   }
 
   if (phase === 'p2-pick') {

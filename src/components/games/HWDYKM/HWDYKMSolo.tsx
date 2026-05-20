@@ -14,7 +14,7 @@ interface HWDYKMSoloProps {
   onEnd: (p1Score: number, p2Score: number) => void;
 }
 
-type Phase = 'p1-answer' | 'pass-to-p2' | 'p2-answer' | 'reveal' | 'game-over';
+type Phase = 'p1-answer' | 'pass-to-p2' | 'p2-answer' | 'reveal' | 'pass-to-p1' | 'game-over';
 
 const QUESTIONS_PER_GAME = 10;
 
@@ -54,8 +54,6 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
     const s2 = p2Answer.toLowerCase().trim() === p1Guess.toLowerCase().trim() ? 1 : 0;
     const newP1 = p1Score + s1;
     const newP2 = p2Score + s2;
-    setP1Score(newP1);
-    setP2Score(newP2);
 
     if (s1 + s2 > 0) {
       setShowConfetti(true);
@@ -65,13 +63,17 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
     const next = questionIndex + 1;
     if (next >= total) {
       setTimeout(() => {
+        setP1Score(newP1);
+        setP2Score(newP2);
         setFinalScores({ p1: newP1, p2: newP2 });
         setPhase('game-over');
       }, 500);
     } else {
       setTimeout(() => {
+        setP1Score(newP1);
+        setP2Score(newP2);
         setQuestionIndex(next);
-        setPhase('p1-answer');
+        setPhase('pass-to-p1');
         setP1Answer('');
         setP1Guess('');
         setP2Answer('');
@@ -160,6 +162,10 @@ export default function HWDYKMSolo({ deck, p1Name, p2Name, onEnd }: HWDYKMSoloPr
 
   if (phase === 'pass-to-p2') {
     return <PassPhone name={p2Name} onContinue={handlePass} fromName={p1Name} />;
+  }
+
+  if (phase === 'pass-to-p1') {
+    return <PassPhone name={p1Name} onContinue={() => setPhase('p1-answer')} fromName={p2Name} />;
   }
 
   if (phase === 'p2-answer') {

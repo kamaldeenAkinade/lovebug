@@ -13,7 +13,7 @@ interface WMPRSoloProps {
   onEnd: (p1Score: number, p2Score: number) => void;
 }
 
-type Phase = 'p1-pick' | 'p1-guess' | 'pass-to-p2' | 'p2-pick' | 'p2-guess' | 'pass-to-p1' | 'p1-guess-p2' | 'reveal' | 'game-over';
+type Phase = 'p1-pick' | 'p1-guess' | 'pass-to-p2' | 'p2-pick' | 'p2-guess' | 'pass-to-p1' | 'reveal' | 'game-over';
 
 function generateShuffleSeed(count: number): number[][] {
   return Array.from({ length: count }, () =>
@@ -75,20 +75,13 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     setPhase('pass-to-p1');
   }, []);
 
-  const handlePassToP1 = useCallback(() => setPhase('p1-guess-p2'), []);
-
-  const handleP1GuessP2 = useCallback((guess: number) => {
-    setP1Guess(guess);
-    setPhase('reveal');
-  }, []);
+  const handlePassToP1 = useCallback(() => setPhase('reveal'), []);
 
   const handleNextRound = useCallback(() => {
     const s1 = p1Guess === p2Pick ? 1 : 0;
     const s2 = p2Guess === p1Pick ? 1 : 0;
     const newP1 = p1Total + s1;
     const newP2 = p2Total + s2;
-    setP1Total(newP1);
-    setP2Total(newP2);
 
     if (s1 + s2 > 0) {
       setShowConfetti(true);
@@ -98,11 +91,15 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
     const next = questionIndex + 1;
     if (next >= total) {
       setTimeout(() => {
+        setP1Total(newP1);
+        setP2Total(newP2);
         setFinalScores({ p1: newP1, p2: newP2 });
         setPhase('game-over');
       }, 500);
     } else {
       setTimeout(() => {
+        setP1Total(newP1);
+        setP2Total(newP2);
         setQuestionIndex(next);
         setPhase('p1-pick');
         setP1Pick(null);
@@ -231,17 +228,6 @@ export default function WMPRSolo({ deck, p1Name, p2Name, onEnd }: WMPRSoloProps)
 
   if (phase === 'pass-to-p1') {
     return <PassPhone name={p1Name} onContinue={handlePassToP1} fromName={p2Name} />;
-  }
-
-  if (phase === 'p1-guess-p2') {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 animate-float-up">
-        {quitButton}
-        {counter}
-        <h2 className="font-display text-2xl font-bold text-ink text-center">{p1Name}, what did {p2Name} pick?</h2>
-        {renderOptions(handleP1GuessP2)}
-      </div>
-    );
   }
 
   if (phase === 'reveal') {

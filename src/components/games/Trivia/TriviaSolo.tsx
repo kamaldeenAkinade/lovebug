@@ -13,7 +13,7 @@ interface TriviaSoloProps {
   onEnd: (p1Score: number, p2Score: number) => void;
 }
 
-type Phase = 'p1-pick' | 'pass-to-p2' | 'p2-pick' | 'reveal' | 'game-over';
+type Phase = 'p1-pick' | 'pass-to-p2' | 'p2-pick' | 'reveal' | 'pass-to-p1' | 'game-over';
 
 const QUESTIONS_PER_GAME = 10;
 
@@ -73,7 +73,7 @@ export default function TriviaSolo({ deck, p1Name, p2Name, onEnd }: TriviaSoloPr
       setTimeout(() => {
         setCoupleScore(newScore);
         setQuestionIndex(next);
-        setPhase('p1-pick');
+        setPhase('pass-to-p1');
         setP1Pick(null);
         setP2Pick(null);
       }, 500);
@@ -148,6 +148,10 @@ export default function TriviaSolo({ deck, p1Name, p2Name, onEnd }: TriviaSoloPr
 
   if (phase === 'pass-to-p2') {
     return <PassPhone name={p2Name} onContinue={handlePass} fromName={p1Name} />;
+  }
+
+  if (phase === 'pass-to-p1') {
+    return <PassPhone name={p1Name} onContinue={() => setPhase('p1-pick')} fromName={p2Name} />;
   }
 
   if (phase === 'p2-pick') {
